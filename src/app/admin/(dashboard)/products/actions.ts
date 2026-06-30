@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 function slugify(name: string) {
   return name
@@ -15,7 +16,7 @@ export async function createProduct(formData: FormData) {
   const supabase = await createClient();
   const name = String(formData.get("name"));
 
-  await supabase.from("products").insert({
+  const { error } = await supabase.from("products").insert({
     name,
     slug: `${slugify(name)}-${Date.now().toString(36)}`,
     category: formData.get("category"),
@@ -31,6 +32,10 @@ export async function createProduct(formData: FormData) {
 
   revalidatePath("/admin/products");
   revalidatePath("/products");
+
+  if (error) {
+    redirect(`/admin/products?error=${encodeURIComponent(error.message)}`);
+  }
 }
 
 export async function updateProduct(id: string, formData: FormData) {
@@ -54,11 +59,17 @@ export async function updateProduct(id: string, formData: FormData) {
     update.images = [String(imageUrl)];
   }
 
-  await supabase.from("products").update(update).eq("id", id);
+  const { error } = await supabase.from("products").update(update).eq("id", id);
 
   revalidatePath("/admin/products");
   revalidatePath(`/admin/products/${id}/edit`);
   revalidatePath("/products");
+
+  if (error) {
+    redirect(`/admin/products/${id}/edit?error=${encodeURIComponent(error.message)}`);
+  }
+
+  redirect("/admin/products");
 }
 
 export async function toggleProductPublished(id: string, current: boolean) {

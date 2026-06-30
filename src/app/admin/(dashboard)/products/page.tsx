@@ -11,9 +11,9 @@ const categories = [
 export default async function AdminProductsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; category?: string; status?: string }>;
+  searchParams: Promise<{ q?: string; category?: string; status?: string; error?: string }>;
 }) {
-  const { q, category, status } = await searchParams;
+  const { q, category, status, error } = await searchParams;
   const supabase = await createClient();
 
   let query = supabase.from("products").select("*").order("created_at", { ascending: false });
@@ -28,6 +28,15 @@ export default async function AdminProductsPage({
   return (
     <div>
       <h1 className="text-2xl font-bold mb-8">Products</h1>
+
+      {error && (
+        <div
+          className="rounded-[var(--radius-card)] border p-4 mb-6 text-sm"
+          style={{ borderColor: "var(--color-accent-dark)", background: "#FBEDE6", color: "var(--color-accent-dark)" }}
+        >
+          <strong>Couldn&apos;t save the product:</strong> {error}
+        </div>
+      )}
 
       <form
         action={createProduct}

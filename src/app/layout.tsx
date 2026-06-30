@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Space_Grotesk, Inter, JetBrains_Mono } from "next/font/google";
 import Link from "next/link";
 import "./globals.css";
+import FloatingContactButtons from "@/components/FloatingContactButtons";
 
 const display = Space_Grotesk({
   variable: "--font-display",
@@ -30,6 +31,7 @@ const nav = [
   { href: "/products", label: "Shop" },
   { href: "/track", label: "Track Repair" },
   { href: "/quote", label: "Get a Quote" },
+  { href: "/contact", label: "Contact" },
 ];
 
 export default function RootLayout({
@@ -93,9 +95,12 @@ export default function RootLayout({
               <Link href="/track">Track a repair</Link>
               <Link href="/quote">Request a quote</Link>
               <Link href="/products">Browse products</Link>
+              <Link href="/contact">Contact us</Link>
             </div>
           </div>
         </footer>
+
+        <FloatingContactButtons />
       </body>
     </html>
   );
