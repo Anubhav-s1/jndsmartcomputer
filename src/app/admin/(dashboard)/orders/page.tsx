@@ -1,17 +1,25 @@
 import { createClient } from "@/lib/supabase/server";
 import { createRepairOrder, updateOrderStatus } from "./actions";
+import Link from "next/link";
 
 const statuses = [
   "received", "diagnosing", "awaiting_approval", "in_repair",
   "awaiting_parts", "ready_for_pickup", "out_for_delivery", "completed", "cancelled",
 ];
 
-export default async function AdminOrdersPage() {
+export default async function AdminOrdersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; status?: string }>;
+}) {
+  const { q, status } = await searchParams;
   const supabase = await createClient();
-  const { data: orders } = await supabase
-    .from("repair_orders")
-    .select("*")
-    .order("created_at", { ascending: false });
+
+  let query = supabase.from("repair_orders").select("*").order("created_at", { ascending: false });
+  if (q) query = query.or(`customer_name.ilike.%${q}%,tracking_code.ilike.%${q}%,customer_phone.ilike.%${q}%`);
+  if (status) query = query.eq("status", status);
+
+  const { data: orders } = await query;
 
   return (
     <div>
@@ -41,6 +49,30 @@ export default async function AdminOrdersPage() {
         </form>
       </details>
 
+      <form className="flex flex-wrap gap-3 mb-6">
+        <input
+          name="q"
+          defaultValue={q}
+          placeholder="Search by name, phone, or claim code…"
+          className="flex-1 min-w-[220px] rounded-[var(--radius-card)] border px-4 py-2.5 text-sm"
+          style={{ borderColor: "var(--color-line)" }}
+        />
+        <select name="status" defaultValue={status ?? ""} className="rounded-[var(--radius-card)] border px-4 py-2.5 text-sm" style={{ borderColor: "var(--color-line)" }}>
+          <option value="">All statuses</option>
+          {statuses.map((s) => <option key={s} value={s}>{s.replace("_", " ")}</option>)}
+        </select>
+        <button type="submit" className="rounded-[var(--radius-card)] px-5 py-2.5 text-sm font-semibold text-white" style={{ background: "var(--color-primary)" }}>
+          Filter
+        </button>
+        {(q || status) && (
+          <Link href="/admin/orders" className="rounded-[var(--radius-card)] px-5 py-2.5 text-sm font-semibold border" style={{ borderColor: "var(--color-line)" }}>
+            Clear
+          </Link>
+        )}
+      </form>
+
+      <h2 className="font-semibold mb-4">{orders?.length ?? 0} order{orders?.length === 1 ? "" : "s"}</h2>
+
       <div className="space-y-4">
         {orders?.map((o) => (
           <div key={o.id} className="rounded-[var(--radius-card)] border p-5" style={{ borderColor: "var(--color-line)" }}>
@@ -67,6 +99,11 @@ export default async function AdminOrdersPage() {
             </form>
           </div>
         ))}
+        {!orders?.length && (
+          <p className="text-sm py-8 text-center" style={{ color: "var(--color-ink-soft)" }}>
+            No orders match these filters.
+          </p>
+        )}
       </div>
     </div>
   );

@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
-export default function ImageUploadField() {
+export default function ImageUploadField({ existingUrl }: { existingUrl?: string }) {
   const [uploading, setUploading] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(existingUrl ?? null);
   const [error, setError] = useState<string | null>(null);
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -69,6 +69,11 @@ export default function ImageUploadField() {
       {error && (
         <p className="text-xs mt-1.5" style={{ color: "var(--color-accent-dark)" }}>
           {error}
+        </p>
+      )}
+      {existingUrl && !uploading && (
+        <p className="text-xs mt-1.5" style={{ color: "var(--color-ink-soft)" }}>
+          Leave as-is to keep the current photo, or choose a new file to replace it.
         </p>
       )}
 
